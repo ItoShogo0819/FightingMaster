@@ -25,10 +25,4 @@ namespace FightingGame.Inputs
         Up = 8,
         UpForward = 9
     }
-
-    public enum FacingDirection : sbyte
-    {
-        Left = -1,
-        Right = 1,
-    }
 }
