@@ -3,13 +3,13 @@ using FightingGame.Character;
 
 public class FighterFacing : MonoBehaviour
 {
-    public FighterFaicing Current { get; private set; } = FighterFaicing.Right;
+    public FacingDirection Current { get; private set; } = FacingDirection.Right;
 
     public void UpdateFacing(bool canTurn)
     {
         if (!canTurn) return;
 
-        Current = opponent.position.x >= transform.position.y ? FighterFaicing.Right : FighterFaicing.Left;
+        Current = opponent.position.x >= transform.position.x ? FacingDirection.Right : FacingDirection.Left;
     }
 
     [SerializeField] private Transform opponent;
