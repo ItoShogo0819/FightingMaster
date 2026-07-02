@@ -13,7 +13,7 @@ namespace FightingGame.Inputs
         /// </summary>
         public static AbsoluteDirection ToAbsolute(Vector2 input, float threshold = 0.4f)
         {
-            int holizontal = input.x switch
+            int horizontal = input.x switch
             {
                 >= 0.4f => 1,
                 <= -0.4f => -1,
@@ -23,11 +23,11 @@ namespace FightingGame.Inputs
             int vertical = input.y switch
             {
                 >= 0.4f => 1,
-                <= -0.4f => 1,
+                <= -0.4f => -1,
                 _ => -0,
             };
 
-            return (holizontal, vertical) switch
+            return (horizontal, vertical) switch
             {
                 (-1,-1) => AbsoluteDirection.DownLeft,
                 (0,-1) => AbsoluteDirection.Down,
