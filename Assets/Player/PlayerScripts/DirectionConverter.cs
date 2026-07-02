@@ -1,4 +1,5 @@
 using UnityEngine;
+using FightingGame.Character;
 
 namespace FightingGame.Inputs
 {
@@ -42,6 +43,34 @@ namespace FightingGame.Inputs
                 (1,1) => AbsoluteDirection.UpRight,
 
                 _ => AbsoluteDirection.Neutral
+            };
+        }
+
+        /// <summary>
+        /// 画面基準の絶対方向（AbsoluteDirection）から、キャラの向きを考慮した相対方向（RelativeDirection）に変換する
+        /// </summary>
+        public static RelativeDirection ToRelative(AbsoluteDirection direction, FacingDirection facing)
+        {
+            if (facing == FacingDirection.Right)
+            {
+                return (RelativeDirection)direction;
+            }
+
+            return direction switch
+            {
+                AbsoluteDirection.DownLeft  => RelativeDirection.DownForward,
+                AbsoluteDirection.Down      => RelativeDirection.Down,
+                AbsoluteDirection.DownRight => RelativeDirection.DownBack,
+
+                AbsoluteDirection.Left      => RelativeDirection.Forward,
+                AbsoluteDirection.Neutral   => RelativeDirection.Neutral,
+                AbsoluteDirection.Right     => RelativeDirection.Back,
+
+                AbsoluteDirection.UpLeft    => RelativeDirection.UpForward,
+                AbsoluteDirection.Up        => RelativeDirection.Up,
+                AbsoluteDirection.UpRight   => RelativeDirection.UpBack,
+
+                _ => RelativeDirection.Neutral
             };
         }
     }
