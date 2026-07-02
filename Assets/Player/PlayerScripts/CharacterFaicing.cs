@@ -1,6 +1,6 @@
 namespace FightingGame.Character
 {
-    public enum FighterFaicing
+    public enum FighterFacing
     {
         Left = -1,
         Right = 1,
