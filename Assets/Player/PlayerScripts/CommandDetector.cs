@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using FightingGame.Inputs;
 
-public class CommandDetector : MonoBehaviour
+public class CommandDetector
 {
     /// <summary>
     /// バッファから特定のコマンドが成立しているかを判定する
