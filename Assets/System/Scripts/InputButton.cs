@@ -9,9 +9,12 @@ namespace FightingGame.Inputs
     public enum InputButton : ushort
     {
         None = 0,
-        Light = 1 << 0,
-        Medium = 1 << 1,
-        Heavy = 1 << 2,
-        Special = 1 << 3,
+        LightPunch = 1 << 0,
+        MediumPunch = 1 << 1,
+        HeavyPunch = 1 << 2,
+        LightKick = 1 << 3,
+        MediumKick = 1 << 4,
+        HeavyKick = 1 << 5,
+        Special = 1 << 6,
     }
 }
