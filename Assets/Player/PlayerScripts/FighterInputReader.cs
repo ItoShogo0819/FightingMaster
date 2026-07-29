@@ -7,9 +7,17 @@ public class FighterInputReader : MonoBehaviour
 {
     [SerializeField] private InputActionReference _moveAction;
 
-    [SerializeField] private InputActionReference _lightAttackAction;
-    [SerializeField] private InputActionReference _mediumAttackAction;
-    [SerializeField] private InputActionReference _heavyAttackAction;
+    [Header("Punch Actions")]
+    [SerializeField] private InputActionReference _lightPunchAction;
+    [SerializeField] private InputActionReference _mediumPunchAction;
+    [SerializeField] private InputActionReference _heavyPunchAction;
+
+    [Header("Kick Actions")]
+    [SerializeField] private InputActionReference _lightKickAction;
+    [SerializeField] private InputActionReference _mediumKickAction;
+    [SerializeField] private InputActionReference _heavyKickAction;
+
+    [Header("System Actions")]
     [SerializeField] private InputActionReference _specialAttackAction;
 
     [SerializeField] private FighterFacing _facing;
@@ -28,9 +36,14 @@ public class FighterInputReader : MonoBehaviour
     {
         _moveAction.action.Enable();
 
-        _lightAttackAction.action.Enable();
-        _mediumAttackAction.action.Enable();
-        _heavyAttackAction.action.Enable();
+        _lightPunchAction.action.Enable();
+        _mediumPunchAction.action.Enable();
+        _heavyPunchAction.action.Enable();
+
+        _lightKickAction.action.Enable();
+        _mediumKickAction.action.Enable();
+        _heavyKickAction.action.Enable();
+
         _specialAttackAction.action.Enable();
     }
 
@@ -38,9 +51,14 @@ public class FighterInputReader : MonoBehaviour
     {
         _moveAction.action.Disable();
 
-        _lightAttackAction.action.Disable();
-        _mediumAttackAction.action.Disable();
-        _heavyAttackAction.action.Disable();
+        _lightPunchAction.action.Disable();
+        _mediumPunchAction.action.Disable();
+        _heavyPunchAction.action.Disable();
+
+        _lightKickAction.action.Disable();
+        _mediumKickAction.action.Disable();
+        _heavyKickAction.action.Disable();
+
         _specialAttackAction.action.Disable();
     }
 
@@ -63,20 +81,35 @@ public class FighterInputReader : MonoBehaviour
 
         // TODO: 攻撃ボタンなどのInputActionがバインドされたら、ここでフラグを判定して代入する
 
-        // 弱攻撃判定(lightAttack)
-        if (_lightAttackAction.action.IsPressed()) held |= InputButton.Light;
-        if(_lightAttackAction.action.WasPressedThisFrame()) pressed |= InputButton.Light;
-        if(_lightAttackAction.action.WasReleasedThisFrame()) released |= InputButton.Light;
+        // 弱P判定
+        if (_lightPunchAction.action.IsPressed()) held |= InputButton.LightPunch;
+        if (_lightPunchAction.action.WasPressedThisFrame()) pressed |= InputButton.LightPunch;
+        if (_lightPunchAction.action.WasReleasedThisFrame()) released |= InputButton.LightPunch;
 
-        // 中攻撃判定(mediumAttack)
-        if (_mediumAttackAction.action.IsPressed()) held |= InputButton.Medium;
-        if (_mediumAttackAction.action.WasPressedThisFrame()) pressed |= InputButton.Medium;
-        if(_mediumAttackAction.action.WasReleasedThisFrame()) released |= InputButton.Medium;
+        // 弱K判定
+        if (_lightKickAction.action.IsPressed()) held |= InputButton.LightKick;
+        if (_lightKickAction.action.WasPressedThisFrame()) pressed |= InputButton.LightKick;
+        if (_lightKickAction.action.WasReleasedThisFrame()) released |= InputButton.LightKick;
 
-        // 強攻撃判定(heavyAttack)
-        if (_heavyAttackAction.action.IsPressed()) held |= InputButton.Heavy;
-        if (_heavyAttackAction.action.WasPressedThisFrame()) pressed |= InputButton.Heavy;
-        if (_heavyAttackAction.action.WasReleasedThisFrame()) released |= InputButton.Heavy;
+        // 中P判定
+        if (_mediumPunchAction.action.IsPressed()) held |= InputButton.MediumPunch;
+        if (_mediumPunchAction.action.WasPressedThisFrame()) pressed |= InputButton.MediumPunch;
+        if (_mediumPunchAction.action.WasReleasedThisFrame()) released |= InputButton.MediumPunch;
+
+        // 中K判定
+        if (_mediumKickAction.action.IsPressed()) held |= InputButton.MediumKick;
+        if (_mediumKickAction.action.WasPressedThisFrame()) pressed = InputButton.MediumKick;
+        if (_mediumKickAction.action.WasReleasedThisFrame()) released = InputButton.MediumKick;
+
+        // 強P判定
+        if (_heavyPunchAction.action.IsPressed()) held |= InputButton.HeavyPunch;
+        if (_heavyPunchAction.action.WasPressedThisFrame()) pressed |= InputButton.HeavyPunch;
+        if (_heavyPunchAction.action.WasReleasedThisFrame()) released |= InputButton.HeavyPunch;
+
+        // 強K判定
+        if (_heavyPunchAction.action.IsPressed()) held |= InputButton.HeavyKick;
+        if (_heavyPunchAction.action.WasPressedThisFrame()) pressed |= InputButton.HeavyKick;
+        if (_heavyPunchAction.action.WasReleasedThisFrame()) released |= InputButton.HeavyKick;
 
         // SP攻撃判定(specialAttack)
         if (_specialAttackAction.action.IsPressed()) held |= InputButton.Special;
