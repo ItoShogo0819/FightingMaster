@@ -5,11 +5,14 @@ using UnityEngine.InputSystem;
 
 public class FighterInputReader : MonoBehaviour
 {
-    [SerializeField]
-    private InputActionReference _moveAction;
+    [SerializeField] private InputActionReference _moveAction;
 
-    [SerializeField]
-    private FighterFacing _facing;
+    [SerializeField] private InputActionReference _lightAttackAction;
+    [SerializeField] private InputActionReference _mediumAttackAction;
+    [SerializeField] private InputActionReference _heavyAttackAction;
+    [SerializeField] private InputActionReference _specialAttackAction;
+
+    [SerializeField] private FighterFacing _facing;
 
     private InputBuffer _inputBuffer;
     public InputBuffer Buffer => _inputBuffer;
@@ -24,33 +27,63 @@ public class FighterInputReader : MonoBehaviour
     private void OnEnable()
     {
         _moveAction.action.Enable();
+
+        _lightAttackAction.action.Enable();
+        _mediumAttackAction.action.Enable();
+        _heavyAttackAction.action.Enable();
+        _specialAttackAction.action.Enable();
     }
 
     private void OnDisable()
     {
         _moveAction.action.Disable();
+
+        _lightAttackAction.action.Disable();
+        _mediumAttackAction.action.Disable();
+        _heavyAttackAction.action.Disable();
+        _specialAttackAction.action.Disable();
     }
 
     private void Update()
     {
-        // 1. 方向入力(Vector2)の読み取り
+        // 方向入力(Vector2)の読み取り
         Vector2 rawInput = _moveAction.action.ReadValue<Vector2>();
 
-        // 2. 画面基準の絶対方向（AbsoluteDirection）に変換
+        // 画面基準の絶対方向（AbsoluteDirection）に変換
         AbsoluteDirection absDir = DirectionConverter.ToAbsolute(rawInput);
 
-        // 3. キャラ基準の相対方向（RelativeDirection）に変換
+        // キャラ基準の相対方向（RelativeDirection）に変換
         FacingDirection currentFacing = _facing != null ? _facing.Current : FacingDirection.Right;
         RelativeDirection relDir = DirectionConverter.ToRelative(absDir, currentFacing);
 
-        // 4. ボタン入力の取得（※現時点ではボタン用のアクションが未設定のためNoneで初期化）
+        // ボタン入力の取得（※現時点ではボタン用のアクションが未設定のためNoneで初期化）
         InputButton held = InputButton.None;
         InputButton pressed = InputButton.None;
         InputButton released = InputButton.None;
 
         // TODO: 攻撃ボタンなどのInputActionがバインドされたら、ここでフラグを判定して代入する
 
-        // 5. 入力フレーム（InputFrame）を作成
+        // 弱攻撃判定(lightAttack)
+        if (_lightAttackAction.action.IsPressed()) held |= InputButton.Light;
+        if(_lightAttackAction.action.WasPressedThisFrame()) pressed |= InputButton.Light;
+        if(_lightAttackAction.action.WasReleasedThisFrame()) released |= InputButton.Light;
+
+        // 中攻撃判定(mediumAttack)
+        if (_mediumAttackAction.action.IsPressed()) held |= InputButton.Medium;
+        if (_mediumAttackAction.action.WasPressedThisFrame()) pressed |= InputButton.Medium;
+        if(_mediumAttackAction.action.WasReleasedThisFrame()) released |= InputButton.Medium;
+
+        // 強攻撃判定(heavyAttack)
+        if (_heavyAttackAction.action.IsPressed()) held |= InputButton.Heavy;
+        if (_heavyAttackAction.action.WasPressedThisFrame()) pressed |= InputButton.Heavy;
+        if (_heavyAttackAction.action.WasReleasedThisFrame()) released |= InputButton.Heavy;
+
+        // SP攻撃判定(specialAttack)
+        if (_specialAttackAction.action.IsPressed()) held |= InputButton.Special;
+        if(_specialAttackAction.action.WasPressedThisFrame()) pressed |= InputButton.Special;
+        if(_specialAttackAction.action.WasReleasedThisFrame()) released |= InputButton.Special;
+
+        // 入力フレーム（InputFrame）を作成
         InputFrame frame = new InputFrame(
             _currentFrame,
             rawInput,
@@ -61,7 +94,7 @@ public class FighterInputReader : MonoBehaviour
             released
         );
 
-        // 6. バッファにフレームを追加
+        // バッファにフレームを追加
         _inputBuffer.Add(frame);
 
         _currentFrame++;
