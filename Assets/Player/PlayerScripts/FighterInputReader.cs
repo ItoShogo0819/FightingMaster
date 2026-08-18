@@ -98,8 +98,8 @@ public class FighterInputReader : MonoBehaviour
 
         // 中K判定
         if (_mediumKickAction.action.IsPressed()) held |= InputButton.MediumKick;
-        if (_mediumKickAction.action.WasPressedThisFrame()) pressed = InputButton.MediumKick;
-        if (_mediumKickAction.action.WasReleasedThisFrame()) released = InputButton.MediumKick;
+        if (_mediumKickAction.action.WasPressedThisFrame()) pressed |= InputButton.MediumKick;
+        if (_mediumKickAction.action.WasReleasedThisFrame()) released |= InputButton.MediumKick;
 
         // 強P判定
         if (_heavyPunchAction.action.IsPressed()) held |= InputButton.HeavyPunch;
