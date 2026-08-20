@@ -107,9 +107,9 @@ public class FighterInputReader : MonoBehaviour
         if (_heavyPunchAction.action.WasReleasedThisFrame()) released |= InputButton.HeavyPunch;
 
         // 強K判定
-        if (_heavyPunchAction.action.IsPressed()) held |= InputButton.HeavyKick;
-        if (_heavyPunchAction.action.WasPressedThisFrame()) pressed |= InputButton.HeavyKick;
-        if (_heavyPunchAction.action.WasReleasedThisFrame()) released |= InputButton.HeavyKick;
+        if (_heavyKickAction.action.IsPressed()) held |= InputButton.HeavyKick;
+        if (_heavyKickAction.action.WasPressedThisFrame()) pressed |= InputButton.HeavyKick;
+        if (_heavyKickAction.action.WasReleasedThisFrame()) released |= InputButton.HeavyKick;
 
         // SP攻撃判定(specialAttack)
         if (_specialAttackAction.action.IsPressed()) held |= InputButton.Special;
@@ -134,5 +134,6 @@ public class FighterInputReader : MonoBehaviour
 
         // デバッグログを出力（絶対方向と相対方向、現在のキャラクターの向き）
         Debug.Log($"Frame: {frame.Frame} | Abs: {frame.AbsoluteDirection} | Rel: {frame.RelativeDirection} (Facing: {currentFacing})");
+        Debug.Log($"Frame: {frame.Frame} | Abs: {frame.AbsoluteDirection} | Rel: {frame.RelativeDirection} | Held: {frame.HeldButtons} | Pressed: {frame.PressedButtons}"); 
     }
 }
