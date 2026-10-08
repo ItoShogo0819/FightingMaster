@@ -1,22 +1,33 @@
+﻿using System.Collections.Generic;
 using UnityEngine;
 using FightingGame.Inputs;
 
+/// <summary>
+/// 必殺技などのコマンド入力データ（正規シーケンス、簡易入力、受付猶予、ボタンなど）を定義する ScriptableObject。
+/// </summary>
 [CreateAssetMenu(fileName = "CommandDefinition", menuName = "FightingGame/CommandDefinition")]
 public class CommandDefinitionSO : ScriptableObject
 {
     [Header("コマンド設定")]
-    [Tooltip("コマンド名(例：Hadouken)")]
+    [Tooltip("コマンド名（例：Hadouken / 波動拳）")]
     public string CommandName;
 
-    [Tooltip("コマンドの方向キー入力順。最新入力を配列の最後とする")]
+    [Header("方向シーケンス")]
+    [Tooltip("正規のコマンド順序（例：[Down, DownForward, Forward] ＝ 236）")]
     public RelativeDirection[] inputSequence;
 
-    [Tooltip("コマンド完成までの猶予フレーム(基本的に7～12f)")]
-    public int inputWindow = 12;
+    [Tooltip("許容する簡易入力・省略入力のパターン（例：[Down, Forward] ＝ 26）")]
+    public RelativeDirection[] allowedShortCuts;
 
-    [Tooltip("必要とする攻撃ボタン")]
+    [Header("受付時間・ボタン")]
+    [Tooltip("最初の方向入力から完了するまでの猶予フレーム数（デフォルトは15フレーム）")]
+    public int inputWindow = 15;
+
+    [Tooltip("コマンド成立に必要な攻撃ボタン（弱・中・強をまとめて指定可能）")]
     public InputButton requiredButtons;
 
-    [Tooltip("優先度(数値が大きいほど優先度が高い)")]
+    [Tooltip("技の発動に必要な最低同時押しボタン数（通常技は1、EX技は2）")]
+    public int minPressedButtons = 1;
+
     public int priority;
 }

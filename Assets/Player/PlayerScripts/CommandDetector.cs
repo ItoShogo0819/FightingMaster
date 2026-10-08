@@ -1,52 +1,113 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using FightingGame.Inputs;
 
+/// <summary>
+/// 入力バッファ（InputBuffer）の履歴を走査し、
+/// 特定のコマンド（正規コマンドおよび簡易入力）が成立しているかを判定するクラス。
+/// MonoBehaviour を継承しない純粋な C# クラスとして実装されています。
+/// </summary>
 public class CommandDetector
 {
     /// <summary>
-    /// バッファから特定のコマンドが成立しているかを判定する
+    /// 指定された入力バッファから、コマンドが成立しているかを判定します。
+    /// 成立した場合、実際に押された攻撃ボタンを out 引数で返します（弱・中・強の判別用）。
     /// </summary>
-    /// <param name="buffer"></param>
-    /// <param name="command"></param>
-    /// <returns></returns>
-    public bool CheckCommand(InputBuffer buffer, CommandDefinitionSO command)
+    /// <param name="buffer">入力履歴バッファ</param>
+    /// <param name="command">判定対象のコマンド定義アセット</param>
+    /// <param name="usedButton">成立時に押されていたボタン（弱P/中P/強P/EX等の判別用）</param>
+    /// <returns>コマンドが成立した場合は true</returns>
+    public bool CheckCommand(InputBuffer buffer, CommandDefinitionSO command, out InputButton usedButton)
     {
-        // バッファが空の場合はコマンド成立しない(必要フレームが溜まっているのか)
+        usedButton = InputButton.None;
         if (buffer.Count == 0) return false;
 
-        //　最新フレームでボタンが「押された瞬間」かをチェック
-        buffer.TryGetRecent(0,out InputFrame latestFrame);
-        if ((latestFrame.PressedButtons & command.requiredButtons) == InputButton.None) return false;
+        // 最新フレームで、コマンドが要求するいずれかのボタンが「新しく押された瞬間」かをチェック
+        buffer.TryGetRecent(0, out InputFrame latestFrame);
+        InputButton matchedButtons = latestFrame.PressedButtons & command.requiredButtons;
+        if (matchedButtons == InputButton.None) return false;
 
-        //　コマンド定義が空の場合は常に成立とする
-        if (command.inputSequence == null || command.inputSequence.Length == 0) return true;
+        // まず正規コマンド（例：236）をチェック
+        if (CheckSequence(buffer, command.inputSequence, command.inputWindow))
+        {
+            usedButton = matchedButtons;
+            return true;
+        }
 
-        //　逆順マッチング用のインデックス(コマンドの最後の入力から探索)
-        int sequenceIndex = command.inputSequence.Length - 1;
+        // 正規でダメなら、簡易入力（例：26 など）をチェック
+        if (command.allowedShortCuts != null && command.allowedShortCuts.Length > 0)
+        {
+            if (CheckSequence(buffer, command.allowedShortCuts, command.inputWindow))
+            {
+                usedButton = matchedButtons;
+                return true;
+            }
+        }
 
-        // 探索する最大フレーム(受付ウィンドウ)
-        int maxSearchFrames = Mathf.Min(buffer.Count, command.inputWindow);
+        return false;
+    }
 
-        // 前回の方向(変化検出用)
+    /// <summary>
+    /// 過去互換性用のオーバーロード（ボタン詳細を受け取らない場合）
+    /// </summary>
+    public bool CheckCommand(InputBuffer buffer, CommandDefinitionSO command)
+    {
+        return CheckCommand(buffer, command, out _);
+    }
+    
+    /// <summary>
+    /// 複数コマンドの中から、成立かつ優先度の最も高いコマンドを検出
+    /// </summary>
+    public CommandDefinitionSO EvaluateBestCommand(InputBuffer buffer, IReadOnlyList<CommandDefinitionSO> commands,
+        out InputButton usedButton)
+    {
+        CommandDefinitionSO bestCommand = null;
+        int highestPriority = int.MinValue;
+        usedButton = InputButton.None;
+
+        foreach (var cmd in commands)
+        {
+            if(cmd == null) continue;
+            
+            if (CheckCommand(buffer, cmd, out InputButton btn))
+            {
+                if (cmd.priority > highestPriority)
+                {
+                    highestPriority = cmd.priority;
+                    bestCommand = cmd;
+                    usedButton = btn;
+                }
+            }
+        }
+
+        return bestCommand;
+    }
+
+    /// <summary>
+    /// 指定された方向シーケンスがバッファ内で成立しているかを逆順走査する共通ヘルパー
+    /// </summary>
+    private bool CheckSequence(InputBuffer buffer, RelativeDirection[] sequence, int inputWindow)
+    {
+        if (sequence == null || sequence.Length == 0) return true;
+
+        int sequenceIndex = sequence.Length - 1;
+        int maxSearchFrames = Mathf.Min(buffer.Count, inputWindow);
+
         RelativeDirection lastDir = RelativeDirection.Neutral;
         bool hasLastDir = false;
 
-        // 最新フレーム(インデックス0)から過去へ遡るループ
-        for(int i = 0; i < maxSearchFrames; i++)
+        for (int i = 0; i < maxSearchFrames; i++)
         {
             if (!buffer.TryGetRecent(i, out InputFrame checkFrame)) break;
 
             RelativeDirection currentDir = checkFrame.RelativeDirection;
 
-            //　初回ループ時は比較対象を最新に設定
             if (!hasLastDir)
             {
                 lastDir = currentDir;
                 hasLastDir = true;
 
-                // 最新フレームの入力がコマンドの最後の入力と一致するかを確認
-                if (currentDir == command.inputSequence[sequenceIndex])
+                if (currentDir == sequence[sequenceIndex])
                 {
                     sequenceIndex--;
                     if (sequenceIndex < 0) return true;
@@ -54,21 +115,18 @@ public class CommandDetector
                 continue;
             }
 
-            // [変化検出]1フレーム先と入力が同じであるならスルー(変化した瞬間だけ見る)
+            // 変化検出（同じ方向が続いている間はスキップ）
             if (currentDir == lastDir) continue;
 
-            // 入力変化時、それが今探しているキー入力と一致するかを確認
-            if (currentDir == command.inputSequence[sequenceIndex])
+            if (currentDir == sequence[sequenceIndex])
             {
                 sequenceIndex--;
                 if (sequenceIndex < 0) return true;
             }
-            // [ニュートラルリセット(オプショナル)]
-            // コマンドに関係のない方向入力が挟まった場合コマンド入力失敗の処理を入れることも可能
 
             lastDir = currentDir;
         }
 
-        return false;   // コマンドが成立していない場合はfalseを返す
+        return false;
     }
 }
