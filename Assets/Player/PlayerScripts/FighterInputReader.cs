@@ -1,10 +1,20 @@
-using FightingGame.Inputs;
+﻿using FightingGame.Inputs;
 using FightingGame.Character;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Unity Input Systemから生の入力を受け取り、
+/// 絶対方向・相対方向・ボタン状態を解析して毎フレーム入力バッファに記録するクラス。
+/// </summary>
 public class FighterInputReader : MonoBehaviour
 {
+    /// <summary>
+    /// 現在蓄積されている入力フレームの履歴バッファを取得します。
+    /// </summary>
+    public InputBuffer Buffer => _inputBuffer;
+    
+    [Header("Movement Action")]
     [SerializeField] private InputActionReference _moveAction;
 
     [Header("Punch Actions")]
@@ -20,103 +30,136 @@ public class FighterInputReader : MonoBehaviour
     [Header("System Actions")]
     [SerializeField] private InputActionReference _specialAttackAction;
 
+    [Header("Character Facing")]
     [SerializeField] private FighterFacing _facing;
 
     private InputBuffer _inputBuffer;
-    public InputBuffer Buffer => _inputBuffer;
 
     private int _currentFrame = 0;
 
     private void Awake()
     {
+        // 入力バッファを初期化（デフォルトの120フレーム＝2秒分）
         _inputBuffer = new InputBuffer();
     }
 
     private void OnEnable()
     {
-        _moveAction.action.Enable();
+        // 各アクションの入力を有効化
+        if (_moveAction != null) _moveAction.action.Enable();
 
-        _lightPunchAction.action.Enable();
-        _mediumPunchAction.action.Enable();
-        _heavyPunchAction.action.Enable();
+        // 弱・中・強Pの入力判定
+        if (_lightPunchAction != null) _lightPunchAction.action.Enable();
+        if (_mediumPunchAction != null) _mediumPunchAction.action.Enable();
+        if (_heavyPunchAction != null) _heavyPunchAction.action.Enable();
 
-        _lightKickAction.action.Enable();
-        _mediumKickAction.action.Enable();
-        _heavyKickAction.action.Enable();
+        //　弱・中・強Kの入力判定
+        if (_lightKickAction != null) _lightKickAction.action.Enable();
+        if (_mediumKickAction != null) _mediumKickAction.action.Enable();
+        if (_heavyKickAction != null) _heavyKickAction.action.Enable();
 
-        _specialAttackAction.action.Enable();
+        if (_specialAttackAction != null) _specialAttackAction.action.Enable();
     }
 
     private void OnDisable()
     {
-        _moveAction.action.Disable();
+        // 各アクションの入力を無効化
+        if (_moveAction != null) _moveAction.action.Disable();
 
-        _lightPunchAction.action.Disable();
-        _mediumPunchAction.action.Disable();
-        _heavyPunchAction.action.Disable();
+        if (_lightPunchAction != null) _lightPunchAction.action.Disable();
+        if (_mediumPunchAction != null) _mediumPunchAction.action.Disable();
+        if (_heavyPunchAction != null) _heavyPunchAction.action.Disable();
 
-        _lightKickAction.action.Disable();
-        _mediumKickAction.action.Disable();
-        _heavyKickAction.action.Disable();
+        if (_lightKickAction != null) _lightKickAction.action.Disable();
+        if (_mediumKickAction != null) _mediumKickAction.action.Disable();
+        if (_heavyKickAction != null) _heavyKickAction.action.Disable();
 
-        _specialAttackAction.action.Disable();
+        if (_specialAttackAction != null) _specialAttackAction.action.Disable();
     }
 
     private void Update()
     {
-        // 方向入力(Vector2)の読み取り
-        Vector2 rawInput = _moveAction.action.ReadValue<Vector2>();
+        // 1. 方向入力(Vector2)の読み取り
+        Vector2 rawInput = _moveAction != null ? _moveAction.action.ReadValue<Vector2>() : Vector2.zero;
 
-        // 画面基準の絶対方向（AbsoluteDirection）に変換
+        // 2. 画面基準の絶対方向（AbsoluteDirection）に変換
         AbsoluteDirection absDir = DirectionConverter.ToAbsolute(rawInput);
 
-        // キャラ基準の相対方向（RelativeDirection）に変換
+        // 3. キャラ基準の相対方向（RelativeDirection）に変換
         FacingDirection currentFacing = _facing != null ? _facing.Current : FacingDirection.Right;
         RelativeDirection relDir = DirectionConverter.ToRelative(absDir, currentFacing);
 
-        // ボタン入力の取得（※現時点ではボタン用のアクションが未設定のためNoneで初期化）
+        // 4. ボタン入力の初期化
         InputButton held = InputButton.None;
         InputButton pressed = InputButton.None;
         InputButton released = InputButton.None;
 
-        // TODO: 攻撃ボタンなどのInputActionがバインドされたら、ここでフラグを判定して代入する
+        // 5. パンチボタン入力判定 (|= で同時押しに対応)
+        // 弱パンチ (LightPunch)
+        if (_lightPunchAction != null)
+        {
+            var action = _lightPunchAction.action;
+            if (action.IsPressed()) held |= InputButton.LightPunch;
+            if (action.WasPressedThisFrame()) pressed |= InputButton.LightPunch;
+            if (action.WasReleasedThisFrame()) released |= InputButton.LightPunch;
+        }
 
-        // 弱P判定
-        if (_lightPunchAction.action.IsPressed()) held |= InputButton.LightPunch;
-        if (_lightPunchAction.action.WasPressedThisFrame()) pressed |= InputButton.LightPunch;
-        if (_lightPunchAction.action.WasReleasedThisFrame()) released |= InputButton.LightPunch;
+        // 中パンチ (MediumPunch)
+        if (_mediumPunchAction != null)
+        {
+            var action = _mediumPunchAction.action;
+            if (action.IsPressed()) held |= InputButton.MediumPunch;
+            if (action.WasPressedThisFrame()) pressed |= InputButton.MediumPunch;
+            if (action.WasReleasedThisFrame()) released |= InputButton.MediumPunch;
+        }
 
-        // 弱K判定
-        if (_lightKickAction.action.IsPressed()) held |= InputButton.LightKick;
-        if (_lightKickAction.action.WasPressedThisFrame()) pressed |= InputButton.LightKick;
-        if (_lightKickAction.action.WasReleasedThisFrame()) released |= InputButton.LightKick;
+        // 強パンチ (HeavyPunch)
+        if (_heavyPunchAction != null)
+        {
+            var action = _heavyPunchAction.action;
+            if (action.IsPressed()) held |= InputButton.HeavyPunch;
+            if (action.WasPressedThisFrame()) pressed |= InputButton.HeavyPunch;
+            if (action.WasReleasedThisFrame()) released |= InputButton.HeavyPunch;
+        }
 
-        // 中P判定
-        if (_mediumPunchAction.action.IsPressed()) held |= InputButton.MediumPunch;
-        if (_mediumPunchAction.action.WasPressedThisFrame()) pressed |= InputButton.MediumPunch;
-        if (_mediumPunchAction.action.WasReleasedThisFrame()) released |= InputButton.MediumPunch;
+        // 6. キックボタン入力判定
+        // 弱キック (LightKick)
+        if (_lightKickAction != null)
+        {
+            var action = _lightKickAction.action;
+            if (action.IsPressed()) held |= InputButton.LightKick;
+            if (action.WasPressedThisFrame()) pressed |= InputButton.LightKick;
+            if (action.WasReleasedThisFrame()) released |= InputButton.LightKick;
+        }
 
-        // 中K判定
-        if (_mediumKickAction.action.IsPressed()) held |= InputButton.MediumKick;
-        if (_mediumKickAction.action.WasPressedThisFrame()) pressed |= InputButton.MediumKick;
-        if (_mediumKickAction.action.WasReleasedThisFrame()) released |= InputButton.MediumKick;
+        // 中キック (MediumKick)
+        if (_mediumKickAction != null)
+        {
+            var action = _mediumKickAction.action;
+            if (action.IsPressed()) held |= InputButton.MediumKick;
+            if (action.WasPressedThisFrame()) pressed |= InputButton.MediumKick;
+            if (action.WasReleasedThisFrame()) released |= InputButton.MediumKick;
+        }
 
-        // 強P判定
-        if (_heavyPunchAction.action.IsPressed()) held |= InputButton.HeavyPunch;
-        if (_heavyPunchAction.action.WasPressedThisFrame()) pressed |= InputButton.HeavyPunch;
-        if (_heavyPunchAction.action.WasReleasedThisFrame()) released |= InputButton.HeavyPunch;
+        // 強キック (HeavyKick)
+        if (_heavyKickAction != null)
+        {
+            var action = _heavyKickAction.action;
+            if (action.IsPressed()) held |= InputButton.HeavyKick;
+            if (action.WasPressedThisFrame()) pressed |= InputButton.HeavyKick;
+            if (action.WasReleasedThisFrame()) released |= InputButton.HeavyKick;
+        }
 
-        // 強K判定
-        if (_heavyKickAction.action.IsPressed()) held |= InputButton.HeavyKick;
-        if (_heavyKickAction.action.WasPressedThisFrame()) pressed |= InputButton.HeavyKick;
-        if (_heavyKickAction.action.WasReleasedThisFrame()) released |= InputButton.HeavyKick;
+        // 7. システム・スペシャルボタン入力判定
+        if (_specialAttackAction != null)
+        {
+            var action = _specialAttackAction.action;
+            if (action.IsPressed()) held |= InputButton.Special;
+            if (action.WasPressedThisFrame()) pressed |= InputButton.Special;
+            if (action.WasReleasedThisFrame()) released |= InputButton.Special;
+        }
 
-        // SP攻撃判定(specialAttack)
-        if (_specialAttackAction.action.IsPressed()) held |= InputButton.Special;
-        if(_specialAttackAction.action.WasPressedThisFrame()) pressed |= InputButton.Special;
-        if(_specialAttackAction.action.WasReleasedThisFrame()) released |= InputButton.Special;
-
-        // 入力フレーム（InputFrame）を作成
+        // 8. 入力フレーム（InputFrame）を作成
         InputFrame frame = new InputFrame(
             _currentFrame,
             rawInput,
@@ -127,13 +170,12 @@ public class FighterInputReader : MonoBehaviour
             released
         );
 
-        // バッファにフレームを追加
+        // 9. バッファにフレームを追加
         _inputBuffer.Add(frame);
 
         _currentFrame++;
 
-        // デバッグログを出力（絶対方向と相対方向、現在のキャラクターの向き）
-        Debug.Log($"Frame: {frame.Frame} | Abs: {frame.AbsoluteDirection} | Rel: {frame.RelativeDirection} (Facing: {currentFacing})");
-        Debug.Log($"Frame: {frame.Frame} | Abs: {frame.AbsoluteDirection} | Rel: {frame.RelativeDirection} | Held: {frame.HeldButtons} | Pressed: {frame.PressedButtons}"); 
+        // デバッグログ出力 (※テスト時はコメント解除して使用)
+        // Debug.Log($"Frame: {frame.Frame} | Abs: {frame.AbsoluteDirection} | Rel: {frame.RelativeDirection} | Held: {frame.HeldButtons} | Pressed: {frame.PressedButtons}");
     }
 }
